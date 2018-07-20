@@ -8,6 +8,7 @@ made based on the contents of the template.json file.
 This applications requires the following API Client libraries:
 
 [Authentication Client C#](https://github.com/GenesysPureEngage/authentication-client-csharp)
+
 [Statistics Client C#](https://github.com/GenesysPureEngage/statistics-client-csharp)
 
 ## Running
