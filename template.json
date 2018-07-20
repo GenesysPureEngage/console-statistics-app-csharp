@@ -1,7 +1,7 @@
 ﻿[
   // Current Agent State
   {
-    'objectId': '<Employee_Id_of_Agent>',
+    'objectId': 'jim.crespino@genesys.com',
     'objectType': 'Agent',
     'definition': {
       'notificationMode': 'Immediate',

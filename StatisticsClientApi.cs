@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using RestSharp;
-using CometD.NetCore.Client;
 using System.Collections;
 using System.Threading.Tasks;
 using Genesys.Internal.Statistics.Client;
@@ -11,6 +10,9 @@ using Genesys.Internal.Statistics.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.IO;
+using CometD.NetCore.Bayeux.Client;
+using CometD.NetCore.Bayeux;
+using CometD.NetCore.Client;
 
 namespace consolestatisticsappcsharp
 {
@@ -18,50 +20,37 @@ namespace consolestatisticsappcsharp
     {
         private static readonly log4net.ILog log = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        private CookieContainer cookieContainer;
         private bool statisticsInitialized = false;
-        private ApiClient apiClient;
+        //private ApiClient apiClient;
         private StatisticsApi api;
         private Notifications notifications;
         private JObject jsonSubscription = null;
+        private string baseUrl = null;
 
         public StatisticsClientApi(String apiKey, String baseUrl)
         {
-            cookieContainer = new CookieContainer();
+            this.baseUrl = baseUrl;
 
-            apiClient = new ApiClient(baseUrl + "/statistics/v3");
-            ((Configuration)apiClient.Configuration).BasePath = baseUrl + "/statistics/v3";
-            apiClient.Configuration.ApiKey.Add("x-api-key", apiKey);
-            apiClient.Configuration.DefaultHeader.Add("x-api-key", apiKey);
-            apiClient.RestClient.CookieContainer = cookieContainer;
-            apiClient.RestClient.AddDefaultHeader("x-api-key", apiKey);
+            api = new StatisticsApi(baseUrl + "/statistics/v3");
+            api.Configuration.AddDefaultHeader("x-api-key", apiKey);
+            api.Configuration.ApiClient.RestClient.CookieContainer = CookieManager.Cookies;
 
-            api = new StatisticsApi((Configuration)apiClient.Configuration);
             notifications = new Notifications();
         } 
 
-        void OnServiceStateChanged(CometD.NetCore.Bayeux.Client.IClientSessionChannel channel, CometD.NetCore.Bayeux.IMessage message, BayeuxClient client)
+        void OnServiceStateChanged(IClientSessionChannel channel, IMessage message, BayeuxClient client)
         {
-            log.Debug("OnServiceStateChanged received: " + message.ToString());
-
-            IDictionary<string, object> data = message.DataAsDictionary;
-
-            foreach (string key in data.Keys)
-            {
-                log.Debug("Key = " + key + ": " + data[key]);
-            }
+            log.Debug("++++OnServiceStateChanged++++ received: " + message.ToString());
         }
 
-        void OnStatisticUpdate(CometD.NetCore.Bayeux.Client.IClientSessionChannel channel, CometD.NetCore.Bayeux.IMessage message, BayeuxClient client)
+        void OnStatisticUpdate(IClientSessionChannel channel, IMessage message, BayeuxClient client)
         {
-            log.Debug("OnStatisticsUpdate received: " + message.ToString());
+            log.Debug("\n\n\n++++OnStatisticsUpdate++++ received: \n" + message.ToString() + "\n\n\n");
+        }
 
-            IDictionary<string, object> data = message.DataAsDictionary;
-
-            foreach (string key in data.Keys)
-            {
-                log.Debug("Key = " + key + ": " + data[key]);
-            }        
+        public void DumpCookies(String baseUrl)
+        {
+            CookieManager.DumpCookies(baseUrl);
         }
 
         public void Initialize(string token)
@@ -71,30 +60,18 @@ namespace consolestatisticsappcsharp
 
         public void Initialize(string authCode, string redirectUri, string token)
         {
-            apiClient.Configuration.DefaultHeader.Add("Authorization", "bearer " + token);
-            apiClient.RestClient.AddDefaultHeader("Authorization", "bearer" + token);
-
+            api.Configuration.AddDefaultHeader("Authorization", "bearer " + token);
 
             try
             {
                 notifications.subscribe("/statistics/v3/service", OnServiceStateChanged);
                 notifications.subscribe("/statistics/v3/updates", OnStatisticUpdate);
-                notifications.Initialize(apiClient);
+                notifications.Initialize(api);
             }
             catch (Exception exc)
             {
                 log.Error("Failed to initialize statistics", exc);
             }
-
-
-
-
-
-
-            //var response = api.PeekSubscriptionStats("1");
-
-            //log.Debug(response.ToString());
-
         }
 
         public void Subscribe()
@@ -186,6 +163,7 @@ namespace consolestatisticsappcsharp
             jsonSubscription["data"]["statistics"] = jsonStatistics;
 
             StatisticDataResponse response = api.CreateSubscription(jsonSubscription.ToString());
+
             log.Debug(response.ToJson());
         }
 

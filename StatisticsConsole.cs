@@ -116,11 +116,12 @@ namespace consolestatisticsappcsharp
 
             AuthenticationApi authApi = new AuthenticationApi((Genesys.Internal.Authentication.Client.Configuration)authClient.Configuration);
 
-            DefaultOAuth2AccessToken response = authApi.RetrieveToken(
+            ApiResponse<DefaultOAuth2AccessToken> response = authApi.RetrieveTokenWithHttpInfo(
                     "password", authorization, null, "*",
                     this.options.ClientId, null, this.options.Username, this.options.Password);
+            CookieManager.SaveCookies(new Uri(this.options.BaseUrl + "/auth/v3/"), response.Headers);
 
-            return response.AccessToken;
+            return response.Data.AccessToken;
         }
 
         private void Init()
@@ -179,11 +180,6 @@ namespace consolestatisticsappcsharp
                         }
 
                         List<string> args = cmd.Args;
-                        string id;
-                        string destination;
-                        string key;
-                        string value;
-                        CompleteParams completeParams;
 
                         switch (cmd.Name)
                         {
@@ -199,6 +195,10 @@ namespace consolestatisticsappcsharp
                                 api.Destroy();
                                 break;
 
+                            case "c":
+                                api.DumpCookies(this.options.BaseUrl + "/statistics/v3");
+                                break;
+                            
                             case "subscribe":
                             case"s":
                                 api.Subscribe();
@@ -229,6 +229,7 @@ namespace consolestatisticsappcsharp
                             case "exit":
                             case "x":
                                 this.Write("Cleaning up and exiting...");
+                                //api.DeleteSubscription();
                                 return;
 
                             case "?":

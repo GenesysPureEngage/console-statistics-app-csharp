@@ -18,7 +18,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <AssemblyName>console-statistics-app-csharp</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <Optimize>true</Optimize>
@@ -27,6 +27,7 @@
     <WarningLevel>4</WarningLevel>
     <ExternalConsole>true</ExternalConsole>
     <PlatformTarget>x86</PlatformTarget>
+    <AssemblyName>console-statistics-app-csharp</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -59,9 +60,6 @@
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
-    <Reference Include="CometD.NetCore">
-      <HintPath>packages\CometD.NetCore.2.0.1\lib\netstandard2.0\CometD.NetCore.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>packages\Newtonsoft.Json.11.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -72,19 +70,24 @@
     <Reference Include="RestSharp">
       <HintPath>packages\RestSharp.105.1.0\lib\net452\RestSharp.dll</HintPath>
     </Reference>
+    <Reference Include="CometD.NetCore">
+      <HintPath>packages\CometD.NetCore.2.0.1\lib\netstandard2.0\CometD.NetCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Options.cs" />
     <Compile Include="StatisticsConsole.cs" />
     <Compile Include="StatisticsConsoleException.cs" />
     <Compile Include="StatisticsClientApi.cs" />
+    <Compile Include="CookieManager.cs" />
+    <Compile Include="Options.cs" />
     <Compile Include="Notifications.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
     </Content>
     <None Include="packages.config" />
     <Content Include="template.json">

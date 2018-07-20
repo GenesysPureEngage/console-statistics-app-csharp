@@ -5,6 +5,7 @@ using CometD.NetCore.Bayeux;
 using CometD.NetCore.Bayeux.Client;
 using CometD.NetCore.Client;
 using CometD.NetCore.Client.Transport;
+using Genesys.Internal.Statistics.Api;
 using Genesys.Internal.Statistics.Client;
 
 namespace consolestatisticsappcsharp
@@ -23,43 +24,46 @@ namespace consolestatisticsappcsharp
             subscriptions = new Dictionary<string, CometDEventHandler>();
         }
 
-        public void Initialize(ApiClient apiClient)
+        public void Initialize(StatisticsApi api)
         {
             WebHeaderCollection headers = new WebHeaderCollection();
-
-            foreach(string key in apiClient.Configuration.DefaultHeader.Keys)
+            foreach (string key in api.Configuration.DefaultHeader.Keys)
             {
-                switch(key)
+                switch (key)
                 {
                     case "x-api-key":
-                    case "Cookie":
-                    case "Authorization":    
-                        headers.Add(key, apiClient.Configuration.DefaultHeader[key]);
+                    case "Authorization":
+                        headers.Add(key, api.Configuration.DefaultHeader[key]);
                         break;
                 }
             }
 
+            CookieCollection cookieCollection = CookieManager.Cookies.GetCookies(new Uri(api.GetBasePath()));
             /**
              * GWS currently only supports LongPolling as a method to receive events.
              * So tell the CometD library to negotiate a handshake with GWS and setup a LongPolling session.
              */
             LongPollingTransport transport = new LongPollingTransport(null);
-            transport.CookieCollection = apiClient.RestClient.CookieContainer.GetCookies(new Uri(apiClient.RestClient.BaseUrl.ToString() + "/notifications"));
+            transport.CookieCollection = cookieCollection;
             transport.HeaderCollection = headers;
 
-            List<ClientTransport> transports = new List<ClientTransport>();
-            transports.Add(transport);
-
-            bayeuxClient = new BayeuxClient(apiClient.RestClient.BaseUrl.ToString() + "/notifications", transports);
-            bayeuxClient.SetDebugEnabled(true);
+            bayeuxClient = new BayeuxClient(api.GetBasePath() + "/notifications", new List<CometD.NetCore.Client.Transport.ClientTransport>() { transport });
 
             bayeuxClient.Handshake();
             bayeuxClient.WaitFor(30000, new List<BayeuxClient.State>() { BayeuxClient.State.Connected });
 
-            foreach(string channelName in subscriptions.Keys )
+            if (bayeuxClient.Connected)
             {
-                IClientSessionChannel channel = bayeuxClient.GetChannel(channelName);
-                channel.Subscribe(this);
+                foreach (Cookie cookie in cookieCollection)
+                {
+                    CookieManager.AddCookie(cookie);    
+                }
+
+                foreach (string channelName in subscriptions.Keys)
+                {
+                    IClientSessionChannel channel = bayeuxClient.GetChannel(channelName);
+                    channel.Subscribe(this);
+                }
             }
         }
 
@@ -80,12 +84,13 @@ namespace consolestatisticsappcsharp
         {
             try
             {
-                subscriptions[message.Channel](channel, message, bayeuxClient);
+                subscriptions[message.Channel](channel, message, null);
             }
             catch (Exception exc)
             {
-                log.Error("Execption handling OnMessageReceived for " + message.Channel, exc);
+                log.Error("Execption handling OnMessage for " + message.Channel, exc);
             }
         }
     }
 }
+
