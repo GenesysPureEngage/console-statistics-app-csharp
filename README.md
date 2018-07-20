@@ -30,7 +30,10 @@ Edit the template.json file to define any statistics that you wish to subscribe 
 
 
 
+<<<<<<< HEAD
 
 
 
 
+=======
+>>>>>>> e57ce9683decdf22ec1b45fdbbc4bc4d0c1430c5
