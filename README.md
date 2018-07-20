@@ -1,5 +1,7 @@
 # console-statistics-app-csharp
-A console-based application that consume real-time statistics
+A console-based application that consumes real-time statistics.  The application establishes 
+a CometD channel to receive asynchronous statistic updates.  Then statistics subscriptions are
+made based on the contents of the template.json file.
 
 ## Prerequisits
 
@@ -30,10 +32,3 @@ Edit the template.json file to define any statistics that you wish to subscribe 
 
 
 
-<<<<<<< HEAD
-
-
-
-
-=======
->>>>>>> e57ce9683decdf22ec1b45fdbbc4bc4d0c1430c5
