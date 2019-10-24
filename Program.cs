@@ -11,28 +11,20 @@ namespace consolestatisticsappcsharp
 
         static void Main(string[] args)
         {
-            try
+            FileInfo fileInfo = new FileInfo("log4net.config");
+            XmlConfigurator.Configure(fileInfo);
+
+            Options options = Options.parseOptions(args);
+            if (options == null)
             {
-                FileInfo fileInfo = new FileInfo("log4net.config");
-                XmlConfigurator.Configure(fileInfo);
-
-                Options options = Options.parseOptions(args);
-                if (options == null)
-                {
-                    return;
-                }
-
-                StatisticsConsole console = new StatisticsConsole(options);
-
-                // Run() is an async method so we have to call Wait()
-                // have this thread wait for it to finish executing.
-                console.Run().Wait();
+                return;
             }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error!:\n" + e.Message);
-                Console.WriteLine(e.StackTrace);
-            }
+
+            StatisticsConsole console = new StatisticsConsole(options);
+
+            // Run() is an async method so we have to call Wait()
+            // have this thread wait for it to finish executing.
+            console.Run().Wait();
         }
     }
 }
